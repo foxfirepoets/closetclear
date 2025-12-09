@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Upload, Camera, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Upload, Camera, Loader2, CheckCircle, AlertCircle, Sparkles, Wand2 } from 'lucide-react'
 import { pb } from '@/lib/pocketbase'
 import Navbar from '@/components/Navbar'
 
@@ -17,6 +17,23 @@ interface FormData {
   purchase_price: string
   description: string
   tags: string
+}
+
+interface AIAnalysis {
+  name: string
+  category: string
+  color: string
+  pattern: string
+  material: string
+  style: string
+  season: string
+  occasions: string[]
+  brand_guess: string
+  condition: string
+  care_tips: string[]
+  resale_potential: string
+  keep_donate_sell: string
+  recommendation_reason: string
 }
 
 const CATEGORIES = [
@@ -50,6 +67,8 @@ export default function AddItemPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
@@ -77,6 +96,7 @@ export default function AddItemPage() {
       }
 
       setSelectedFile(file)
+      setAiAnalysis(null) // Reset AI analysis when new image selected
 
       // Create preview
       const reader = new FileReader()
@@ -86,6 +106,53 @@ export default function AddItemPage() {
       reader.readAsDataURL(file)
 
       if (error) setError('')
+    }
+  }
+
+  const analyzeWithAI = async () => {
+    if (!selectedFile) {
+      setError('Please upload an image first')
+      return
+    }
+
+    setIsAnalyzing(true)
+    setError('')
+
+    try {
+      const formDataToSend = new FormData()
+      formDataToSend.append('image', selectedFile)
+
+      const response = await fetch('/api/analyze-item', {
+        method: 'POST',
+        body: formDataToSend
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze image')
+      }
+
+      const analysis = data.analysis as AIAnalysis
+      setAiAnalysis(analysis)
+
+      // Auto-fill form with AI analysis
+      setFormData(prev => ({
+        ...prev,
+        name: analysis.name || prev.name,
+        category: CATEGORIES.includes(analysis.category) ? analysis.category : prev.category,
+        color: COLORS.includes(analysis.color) ? analysis.color : prev.color,
+        brand: analysis.brand_guess !== 'Unknown' ? analysis.brand_guess : prev.brand,
+        season: SEASONS.includes(analysis.season) ? analysis.season : prev.season,
+        description: `${analysis.style} ${analysis.material || ''} ${analysis.pattern || ''} item. ${analysis.recommendation_reason}`.trim(),
+        tags: analysis.occasions?.join(', ') || prev.tags
+      }))
+
+    } catch (err: any) {
+      console.error('AI analysis error:', err)
+      setError(err.message || 'Failed to analyze image with AI')
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -145,6 +212,11 @@ export default function AddItemPage() {
         data.append('tags', JSON.stringify(tags))
       }
 
+      // Add AI analysis metadata if available
+      if (aiAnalysis) {
+        data.append('ai_analysis', JSON.stringify(aiAnalysis))
+      }
+
       // Add image file if selected
       if (selectedFile) {
         data.append('image', selectedFile)
@@ -189,6 +261,7 @@ export default function AddItemPage() {
     })
     setSelectedFile(null)
     setImagePreview(null)
+    setAiAnalysis(null)
     setError('')
     setSuccess(false)
   }
@@ -262,16 +335,37 @@ export default function AddItemPage() {
                       alt="Preview"
                       className="max-w-full h-48 object-contain mx-auto rounded-lg"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null)
-                        setImagePreview(null)
-                      }}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Remove Image
-                    </button>
+                    <div className="flex justify-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null)
+                          setImagePreview(null)
+                          setAiAnalysis(null)
+                        }}
+                        className="text-sm text-red-600 hover:text-red-700"
+                      >
+                        Remove Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={analyzeWithAI}
+                        disabled={isAnalyzing}
+                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="h-4 w-4 mr-2" />
+                            AI Auto-Fill
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -298,6 +392,57 @@ export default function AddItemPage() {
                 )}
               </div>
             </div>
+
+            {/* AI Analysis Results */}
+            {aiAnalysis && (
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  <h3 className="font-semibold text-purple-900">AI Analysis Complete</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-600">Style:</span>
+                    <span className="ml-2 text-gray-900">{aiAnalysis.style}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Material:</span>
+                    <span className="ml-2 text-gray-900">{aiAnalysis.material}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Pattern:</span>
+                    <span className="ml-2 text-gray-900">{aiAnalysis.pattern}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Condition:</span>
+                    <span className="ml-2 text-gray-900">{aiAnalysis.condition}</span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-purple-200">
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      aiAnalysis.keep_donate_sell === 'keep'
+                        ? 'bg-green-100 text-green-800'
+                        : aiAnalysis.keep_donate_sell === 'sell'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      Suggestion: {aiAnalysis.keep_donate_sell.toUpperCase()}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      aiAnalysis.resale_potential === 'high'
+                        ? 'bg-green-100 text-green-800'
+                        : aiAnalysis.resale_potential === 'medium'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      Resale: {aiAnalysis.resale_potential}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{aiAnalysis.recommendation_reason}</p>
+                </div>
+              </div>
+            )}
 
             {/* Basic Information */}
             <div className="grid md:grid-cols-2 gap-6">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, TrendingUp, Shirt, Calendar, Eye, Star, ArrowRight } from 'lucide-react'
+import { Plus, TrendingUp, Shirt, Calendar, Eye, Star, ArrowRight, Sparkles } from 'lucide-react'
 import { pb } from '@/lib/pocketbase'
 import Navbar from '@/components/Navbar'
 import ClothingCard from '@/components/ClothingCard'
@@ -208,18 +208,18 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          <div className="card hover:shadow-lg transition-shadow duration-300 group cursor-pointer">
+          <Link href="/insights" className="card hover:shadow-lg transition-shadow duration-300 group bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors duration-300">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-300">
+                <Sparkles className="h-6 w-6 text-purple-600" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">Analytics</h3>
-                <p className="text-gray-600 text-sm">View wearing patterns</p>
+                <h3 className="font-semibold text-gray-900">AI Insights</h3>
+                <p className="text-gray-600 text-sm">Keep, donate, or sell</p>
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-green-600 transition-colors duration-300" />
+              <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors duration-300" />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Main Content Grid */}
