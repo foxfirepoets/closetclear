@@ -182,7 +182,7 @@ export default function LoginPage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
             <p className="text-sm text-blue-800 font-medium mb-1">Demo Account</p>
             <p className="text-xs text-blue-600">
-              Email: demo@closetclear.com | Password: demo123
+              Email: demo@closetclear.com | Password: demo1234
             </p>
           </div>
         </div>

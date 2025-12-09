@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase'
 
-// Get the PocketBase URL from environment variables, defaulting to localhost
-const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+// Get the PocketBase URL from environment variables, defaulting to public tunnel
+const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://plan-computing-manuals-finds.trycloudflare.com'
 
 // Create and export the PocketBase client instance
 export const pb = new PocketBase(PB_URL)
