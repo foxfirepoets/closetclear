@@ -3,9 +3,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '8090',
+        protocol: 'https',
+        hostname: '*.trycloudflare.com',
         pathname: '/api/files/**',
       },
       {
@@ -13,10 +12,16 @@ const nextConfig = {
         hostname: '*.pockethost.io',
         pathname: '/api/files/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8090',
+        pathname: '/api/files/**',
+      },
     ],
   },
   env: {
-    NEXT_PUBLIC_POCKETBASE_URL: process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://localhost:8090',
+    NEXT_PUBLIC_POCKETBASE_URL: process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https://plan-computing-manuals-finds.trycloudflare.com',
   },
 }
 
