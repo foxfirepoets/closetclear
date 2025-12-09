@@ -1,0 +1,5 @@
+node_modules/
+.next/
+.juno_task/
+.env*
+*.log
